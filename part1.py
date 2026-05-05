@@ -7,7 +7,7 @@ def randomGenome(length):
     :param length:
     :return: string, random binary digit
     """
-    """Your Code Here"""
+    return '' .join(random.choice('01') for _ in range (length))
     raiseNotDefined()
 
 
@@ -18,7 +18,7 @@ def makePopulation(size, length):
     :return: list of length size containing genomes of length length
     """
 
-    """Your Code Here"""
+    return[randomGenome(length) for _ in range(size)]
 
     raiseNotDefined()
 
@@ -28,7 +28,7 @@ def fitness(genome):
     :param genome: 
     :return: the fitness value of a genome
     """
-
+    return genome.count('1')
 
     raiseNotDefined()
 
@@ -37,6 +37,10 @@ def evaluateFitness(population):
     :param population: 
     :return: a pair of values: the average fitness of the population as a whole and the fitness of the best individual in the population.
     """
+    fitness = [fitness(genome) for genome in population]
+    avgFitness = sum(fitness)/len(fitness)
+    bestFitness = max(fitness)
+    return (avgFitness,bestFitness)
     raiseNotDefined()
 
 
@@ -47,6 +51,17 @@ def crossover(genome1, genome2):
     :param genome2:
     :return: two new genomes produced by crossing over the given genomes at a random crossover point.
     """
+    if len(genome1) != len(genome2):
+        raise ValueError("Genomes not same len")
+    
+    crossPoint = random.randint(1,len(genome1), -1 )
+
+    child1 = genome1[:crossPoint] + genome2[crossPoint:]
+    child2 = genome2[:crossPoint] + genome1[crossPoint:]
+
+    return (child1,child2)
+
+
     raiseNotDefined()
 
 
@@ -56,6 +71,15 @@ def mutate(genome, mutationRate):
     :param mutationRate:
     :return: a new mutated version of the given genome.
     """
+    mutated = list(genome)
+    for i in range(len(mutated)):
+        if random.random() < mutationRate:
+            mutated[i]= "1" if mutated[i] == "0" else "0"
+
+    return ''.join(mutated)
+
+                  
+
     raiseNotDefined()
 
 def selectPair(population):
@@ -65,6 +89,12 @@ def selectPair(population):
     :return: two genomes from the given population using fitness-proportionate selection.
     This function should use weightedChoice, which is available in the Utils File, as a helper function.
     """
+    fitness = [fitness(genome) for genome in population]
+
+    parent1 = weightedChoice(population, fitness)
+    parent2 = weightedChoice(population,fitness)
+
+    return (parent1, parent2)
     raiseNotDefined()
 
 def runGA(populationSize, crossoverRate, mutationRate, logFile=""):
@@ -76,6 +106,50 @@ def runGA(populationSize, crossoverRate, mutationRate, logFile=""):
     crossover rate (pc), and mutation rate (pm) as parameters. The optional logFile parameter is a string specifying
     the name of a te
     """
+    genomeLen = 20
+    population = makePopulation(populationSize, genomeLen)
+
+    target = "1" * genomeLen
+
+    logHandle = None
+
+    for generation in range(50):
+        avgFitness, bestFitness, = evaluateFitness(population)
+        print(f" Generation is: {generation}, average fitness is: {avgFitness}, best fitness is: {bestFitness}")
+        for genome in population:
+            if genome == target:
+                if logHandle:
+                    logHandle.close()
+                print(f"{logFile}")
+                return generation
+    
+    newPop = []
+
+    fitnesses = [(fitness(x) for x in population)]
+    fitness.sort(reverse=True)
+
+    newPop.append(fitnesses[0][1])
+
+    while len(newPop) < populationSize:
+        parent1, parent2 = selectPair(population)
+
+        if random.random() < crossoverRate:
+                child1, child2 = crossover(parent1, parent2)
+        else: 
+            child1, child2 = parent1, parent2
+
+        child1 = mutate(child1,mutationRate)
+        child2= mutate(child2, mutationRate)
+
+        newPop.append(child1)
+        if len(newPop) < populationSize:
+            newPop.append(child2)
+    
+    population = newPop
+
+            
+
+    
     raiseNotDefined()
 
 
